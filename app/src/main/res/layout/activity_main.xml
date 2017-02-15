@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.superapp.wondercamera.activity.MainActivity">
+    <Button
+        android:id="@+id/btn_setting"
+        android:layout_width="30sp"
+        android:layout_height="30sp"
+        android:layout_alignParentRight="true"
+        android:layout_margin="20sp"
+        android:background="@drawable/settings" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/background" />
+
+    <ImageView
+        android:id="@+id/iv_logo"
+        android:layout_width="100sp"
+        android:layout_height="100sp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="100sp"
+        android:src="@drawable/logo_moment" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/iv_logo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20sp"
+        android:orientation="horizontal">
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="The "
+            android:textColor="#000"
+            android:textSize="20sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Moment"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <Button
+        android:layout_above="@+id/btn_take_photo"
+        android:id="@+id/btn_choose_photo"
+        android:layout_width="250sp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_take_photo"
+        android:drawableLeft="@drawable/album"
+        android:drawablePadding="20sp"
+        android:gravity="left|center_vertical"
+        android:paddingLeft="40sp"
+        android:text="Choose from album"
+        android:textColor="#fff"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginRight="40sp"
+        android:layout_marginLeft="40sp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20sp" />
+    <Button
+        android:id="@+id/btn_take_photo"
+        android:layout_width="250sp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_take_photo"
+        android:drawableLeft="@drawable/camera"
+        android:drawablePadding="20sp"
+        android:gravity="left|center_vertical"
+        android:paddingLeft="40sp"
+        android:text="Take Photo"
+        android:textColor="#fff"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginRight="40sp"
+        android:layout_marginLeft="40sp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="100sp"/>
+
+</RelativeLayout>

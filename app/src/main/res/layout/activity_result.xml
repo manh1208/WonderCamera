@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_result"
+    android:layout_width="match_parent"
+    android:background="#000"
+    android:layout_height="match_parent"
+    tools:context="com.superapp.wondercamera.activity.ResultActivity">
+    <LinearLayout android:id="@+id/bannerLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="60sp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+    </LinearLayout>
+    <Button
+        android:id="@+id/btn_save"
+        android:layout_width="30sp"
+        android:layout_height="30sp"
+        android:layout_alignParentRight="true"
+        android:layout_margin="20sp"
+        android:background="@drawable/save"
+        android:layout_alignTop="@+id/layout_save"/>
+    <RelativeLayout
+        android:layout_below="@+id/bannerLayout"
+        android:id="@+id/layout_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+    <com.superapp.wondercamera.activity.CustomImage
+        android:id="@+id/iv_image_result"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/logo_moment" />
+        <TextView
+            android:id="@+id/txt_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/iv_image_result"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="50sp"
+            android:layout_marginLeft="100sp"
+            android:background="@drawable/background_result"
+            android:gravity="center"
+            android:padding="20sp"
+            android:text="Anh ấy đang buồn bã với tuổi 30"
+            android:textColor="#fff"
+            android:textSize="20sp" />
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="150sp">
+
+        <Button
+            android:id="@+id/btn_back_camera"
+            android:layout_width="70sp"
+            android:layout_height="70sp"
+            android:layout_margin="10sp"
+            android:background="@drawable/back_to_camera" />
+
+        <Button
+            android:id="@+id/btn_share_facebook"
+            android:layout_width="70sp"
+            android:layout_height="70sp"
+            android:layout_alignParentRight="true"
+            android:layout_margin="10sp"
+            android:background="@drawable/share_facebook" />
+    </RelativeLayout>
+
+</RelativeLayout>

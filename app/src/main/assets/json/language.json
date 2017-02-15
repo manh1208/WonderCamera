@@ -1,0 +1,24 @@
+{
+  "message": "OK",
+  "statusCode": 200,
+  "languageList": [
+    {
+      "id": 1,
+      "name": "English",
+      "key":"en",
+      "save":"Save image successful!",
+      "analyze":"Analyze image",
+      "takePhoto":"Take photo",
+      "choosePhoto":"Choose from album"
+    },
+    {
+      "id": 2,
+      "name": "Tiếng Việt",
+      "key":"vn",
+      "save":"Lưu hình thành công!",
+      "analyze":"Phân tích hình ảnh",
+      "takePhoto":"Chụp hình",
+      "choosePhoto":"Chọn từ thư viện"
+    }
+  ]
+}
