@@ -9,7 +9,11 @@
       "save":"Save image successful!",
       "analyze":"Analyze image",
       "takePhoto":"Take photo",
-      "choosePhoto":"Choose from album"
+      "choosePhoto":"Choose from album",
+      "language":"Language",
+      "checkUpdate":"Check Update",
+      "connectionFail":"Can not connect with server. Check your connection and try again!!",
+      "serverError":"Server Error"
     },
     {
       "id": 2,
@@ -18,7 +22,11 @@
       "save":"Lưu hình thành công!",
       "analyze":"Phân tích hình ảnh",
       "takePhoto":"Chụp hình",
-      "choosePhoto":"Chọn từ thư viện"
+      "choosePhoto":"Chọn từ thư viện",
+      "language":"Ngôn ngữ",
+      "checkUpdate":"Kiểm tra phiên bản",
+      "connectionFail": "Không thể kết nối với máy chủ. Kiểm tra lại kết nối và thử lại sau!!",
+      "serverError": "Máy chủ lỗi"
     }
   ]
 }

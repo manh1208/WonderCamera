@@ -1,6 +1,5 @@
 package com.superapp.wondercamera.activity;
 
-import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -25,9 +24,8 @@ import com.facebook.share.widget.ShareDialog;
 import com.revmob.RevMob;
 import com.revmob.RevMobAdsListener;
 import com.revmob.ads.banner.RevMobBanner;
+import com.revmob.ads.interstitial.RevMobFullscreen;
 import com.superapp.wondercamera.R;
-import com.superapp.wondercamera.model.ResponseModel;
-import com.superapp.wondercamera.service.RestService;
 import com.superapp.wondercamera.util.DataUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -36,33 +34,25 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
 public class ResultActivity extends AppCompatActivity implements View.OnClickListener {
-    private String filePath;
-    private String result;
     private TextView txtResult;
     private Button btnSave;
     private Button btnShare;
     private Button btnBack;
     private ImageView ivImage;
     private Bitmap resultBitmap;
-    private File imageFile;
     private RevMob revmob;
     private RevMobBanner banner;
+    private RevMobFullscreen fullscreen;
+    private boolean fullscreenIsLoaded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
         findView();
-        filePath = getIntent().getStringExtra("filePath");
-        result = getIntent().getStringExtra("result");
+        String filePath = getIntent().getStringExtra("filePath");
+        String result = getIntent().getStringExtra("result");
         File imgFile = new File(filePath);
         if (imgFile.exists()) {
             Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
@@ -74,8 +64,6 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
 
         }
         startRevMobSession();
-
-
 
     }
 
@@ -98,17 +86,17 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
         switch (view.getId()) {
             case R.id.btn_save:
                 resultBitmap = takeScreenshot();
-save();
+                save();
                 Toast.makeText(this, DataUtils.getINSTANCE(this).getLanguage().getSave(), Toast.LENGTH_SHORT).show();
                 break;
             case R.id.btn_share_facebook:
                 btnBack.setVisibility(View.INVISIBLE);
                 btnShare.setVisibility(View.INVISIBLE);
                 btnSave.setVisibility(View.INVISIBLE);
-                Bitmap watermark = BitmapFactory.decodeResource(this.getResources(),R.drawable.icon);
+                Bitmap watermark = BitmapFactory.decodeResource(this.getResources(), R.drawable.icon);
                 resultBitmap = takeScreenshot();
                 Bitmap bitmap = resultBitmap;
-                putOverlay(bitmap,watermark);
+                putOverlay(bitmap, watermark);
                 FacebookSdk.sdkInitialize(getApplicationContext());
                 SharePhoto photo = new SharePhoto.Builder()
                         .setBitmap(bitmap)
@@ -135,56 +123,57 @@ save();
         rootView.setDrawingCacheEnabled(false);
         return bitmap;
     }
+
     public void putOverlay(Bitmap bitmap, Bitmap overlay) {
         Canvas canvas = new Canvas(bitmap);
         Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
-        canvas.drawBitmap(overlay, bitmap.getWidth()-overlay.getWidth()-30,30, paint);
+        canvas.drawBitmap(overlay, bitmap.getWidth() - overlay.getWidth() - 30, 30, paint);
     }
 
-    private void save(){
+    private void save() {
         try {
-        String state = Environment.getExternalStorageState();
-        File folder = null;
-        if (state.contains(Environment.MEDIA_MOUNTED)) {
-            folder = new File(Environment
-                    .getExternalStorageDirectory() + "/WonderCamera");
-        } else {
-            folder = new File(Environment
-                    .getExternalStorageDirectory() + "/WonderCamera");
-        }
+            String state = Environment.getExternalStorageState();
+            File folder;
+            if (state.contains(Environment.MEDIA_MOUNTED)) {
+                folder = new File(Environment
+                        .getExternalStorageDirectory() + "/WonderCamera");
+            } else {
+                folder = new File(Environment
+                        .getExternalStorageDirectory() + "/WonderCamera");
+            }
 
-        boolean success = true;
-        if (!folder.exists()) {
-            success = folder.mkdirs();
-        }
-        if (success) {
-            java.util.Date date = new java.util.Date();
-            imageFile = new File(folder.getAbsolutePath()
-                    + File.separator
-                    + "ImageSaved"
-                    + System.currentTimeMillis() % 100000
-                    +".jpg");
+            boolean success = true;
+            if (!folder.exists()) {
+                success = folder.mkdirs();
+            }
+            File imageFile;
+            if (success) {
+                imageFile = new File(folder.getAbsolutePath()
+                        + File.separator
+                        + "ImageSaved"
+                        + System.currentTimeMillis() % 100000
+                        + ".jpg");
 
-            imageFile.createNewFile();
-            Log.d("camera", imageFile.getAbsolutePath());
-        } else {
-            Toast.makeText(getBaseContext(), "Image Not saved",
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
+                imageFile.createNewFile();
+                Log.d("camera", imageFile.getAbsolutePath());
+            } else {
+                Toast.makeText(getBaseContext(), "Image Not saved",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
+            ByteArrayOutputStream ostream = new ByteArrayOutputStream();
 
-        // save image into gallery
-        resultBitmap.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
+            // save image into gallery
+            resultBitmap.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
 
 
-        FileOutputStream fout = null;
+            FileOutputStream fout;
 
             fout = new FileOutputStream(imageFile);
 
-        fout.write(ostream.toByteArray());
-        fout.close();
+            fout.write(ostream.toByteArray());
+            fout.close();
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.DATE_TAKEN,
                     System.currentTimeMillis());
@@ -206,6 +195,7 @@ save();
             @Override
             public void onRevMobSessionStarted() {
                 loadBanner(); // Cache the banner once the session is started
+                loadFullscreen();
                 Log.i("RevMob", "Session Started");
             }
 
@@ -217,6 +207,7 @@ save();
         }, "58989ff659acc9620beeea7b");
         if (revmob != null) {
             loadBanner();
+            loadFullscreen();
         }
         Log.i("Revmob", "ahihi");
     }
@@ -253,5 +244,48 @@ save();
 
             }
         });
+    }
+
+    public void loadFullscreen() {
+        //load it with RevMob listeners to control the events fired
+        fullscreen = revmob.createFullscreen(this,  new RevMobAdsListener() {
+            @Override
+            public void onRevMobAdReceived() {
+                Log.i("RevMob", "Fullscreen loaded.");
+                fullscreenIsLoaded = true;
+                int rand = DataUtils.random(1, 3);
+                Log.d("Random", rand + "");
+                if (rand==1){
+                    showFullscreen();
+                }
+//                showFullscreen();
+            }
+            @Override
+            public void onRevMobAdNotReceived(String message) {
+                Log.i("RevMob", "Fullscreen not received.");
+            }
+            @Override
+            public void onRevMobAdDismissed() {
+                Log.i("RevMob", "Fullscreen dismissed.");
+            }
+            @Override
+            public void onRevMobAdClicked() {
+                Log.i("RevMob", "Fullscreen clicked.");
+            }
+            @Override
+            public void onRevMobAdDisplayed() {
+                Log.i("RevMob", "Fullscreen displayed.");
+            }
+        });
+    }
+    public void showFullscreen() {
+        if(fullscreenIsLoaded) {
+            fullscreen.show(); // call it wherever you want to show the fullscreen ad
+            fullscreenIsLoaded = false;
+//            loadFullscreen();
+        } else {
+//            loadFullscreen();
+            Log.i("RevMob", "Ad not loaded yet.");
+        }
     }
 }

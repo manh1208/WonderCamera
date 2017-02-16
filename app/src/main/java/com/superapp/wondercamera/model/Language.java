@@ -12,6 +12,10 @@ public class Language {
     private String analyze;
     private String takePhoto;
     private String choosePhoto;
+    private String language;
+    private String checkUpdate;
+    private String connectionFail;
+    private String serverError;
 
 
 
@@ -69,5 +73,37 @@ public class Language {
 
     public void setChoosePhoto(String choosePhoto) {
         this.choosePhoto = choosePhoto;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getCheckUpdate() {
+        return checkUpdate;
+    }
+
+    public void setCheckUpdate(String checkUpdate) {
+        this.checkUpdate = checkUpdate;
+    }
+
+    public String getConnectionFail() {
+        return connectionFail;
+    }
+
+    public void setConnectionFail(String connectionFail) {
+        this.connectionFail = connectionFail;
+    }
+
+    public String getServerError() {
+        return serverError;
+    }
+
+    public void setServerError(String serverError) {
+        this.serverError = serverError;
     }
 }

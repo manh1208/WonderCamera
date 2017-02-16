@@ -12,7 +12,8 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:gravity="center_horizontal"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:background="#000">
     </LinearLayout>
     <Button
         android:id="@+id/btn_save"
@@ -28,23 +29,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true">
-    <com.superapp.wondercamera.activity.CustomImage
+    <com.superapp.wondercamera.custom.CustomImage
         android:id="@+id/iv_image_result"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/logo_moment" />
+        android:src="@drawable/logo_moment"
+        android:scaleType="centerCrop"/>
         <TextView
             android:id="@+id/txt_result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignBottom="@id/iv_image_result"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="50sp"
+            android:layout_marginBottom="80sp"
             android:layout_marginLeft="100sp"
             android:background="@drawable/background_result"
             android:gravity="center"
             android:padding="20sp"
-            android:text="Anh ấy đang buồn bã với tuổi 30"
+            android:text="@string/string_result"
             android:textColor="#fff"
             android:textSize="20sp" />
 
@@ -56,6 +58,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
+        android:layout_marginStart="150sp"
         android:layout_marginLeft="150sp">
 
         <Button

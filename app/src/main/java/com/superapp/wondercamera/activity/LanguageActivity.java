@@ -1,14 +1,15 @@
 package com.superapp.wondercamera.activity;
 
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
 import com.superapp.wondercamera.R;
 import com.superapp.wondercamera.util.DataUtils;
+
 import java.util.List;
 
 public class LanguageActivity extends AppCompatActivity {
@@ -26,9 +27,6 @@ public class LanguageActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 DataUtils.getINSTANCE(LanguageActivity.this).setmCurrentLanguage(position+1);
-//                Intent intent = new Intent(LanguageActivity.this,MainActivity.class);
-//                startActivity(intent);
-//                finish();
                 onBackPressed();
             }
         });

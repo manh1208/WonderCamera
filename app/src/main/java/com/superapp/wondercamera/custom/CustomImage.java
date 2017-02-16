@@ -1,4 +1,4 @@
-package com.superapp.wondercamera.activity;
+package com.superapp.wondercamera.custom;
 
 import android.content.Context;
 import android.graphics.Bitmap;

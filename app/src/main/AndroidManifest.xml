@@ -45,6 +45,11 @@
         <provider android:authorities="com.facebook.app.FacebookContentProvider113288645858573"
             android:name="com.facebook.FacebookContentProvider"
             android:exported="true"/>
+        <activity
+            android:name="com.revmob.FullscreenActivity"
+            android:theme="@android:style/Theme.Translucent"
+            android:configChanges="keyboardHidden|orientation">
+        </activity>
     </application>
 
 </manifest>

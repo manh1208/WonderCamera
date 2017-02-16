@@ -6,13 +6,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.hardware.Camera;
-import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -23,7 +21,8 @@ import com.revmob.RevMob;
 import com.revmob.RevMobAdsListener;
 import com.revmob.ads.banner.RevMobBanner;
 import com.superapp.wondercamera.R;
-import com.superapp.wondercamera.model.ResponseModel;
+import com.superapp.wondercamera.custom.CameraViewCustom;
+import com.superapp.wondercamera.model.ImageResponseModel;
 import com.superapp.wondercamera.service.RestService;
 import com.superapp.wondercamera.util.DataUtils;
 
@@ -45,16 +44,8 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
     private SurfaceHolder surfaceHolder;
     private Camera camera;
     private Button captureImage;
-    private Button changeCamera;
     private int cameraId;
-    private boolean flashmode = false;
-    private int rotation;
     private ProgressDialog progressDialog;
-    private RequestBody requestFile;
-    private MultipartBody.Part body;
-    private RestService service;
-    private List<Camera.Size> mSupportedPreviewSizes;
-    private Camera.Size mPreviewSize;
     private RevMob revmob;
     private RevMobBanner banner;
 
@@ -65,7 +56,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
         captureImage = (Button) findViewById(R.id.btn_captureImage);
         surfaceView = (CameraViewCustom) findViewById(R.id.surfaceView);
         startRevMobSession();
-        changeCamera = (Button) findViewById(R.id.btn_change_camera);
+        Button changeCamera = (Button) findViewById(R.id.btn_change_camera);
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
         captureImage.setOnClickListener(this);
@@ -81,7 +72,6 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
     @Override
     protected void onResume() {
         super.onResume();
-//        openCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
     }
 
     @Override
@@ -91,8 +81,6 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
 
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
-//        mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes,width,height);
-//        openCamera(cameraId);
 
     }
 
@@ -118,9 +106,6 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
     private void flipCamera() {
         int id = (cameraId == Camera.CameraInfo.CAMERA_FACING_BACK ? Camera.CameraInfo.CAMERA_FACING_FRONT
                 : Camera.CameraInfo.CAMERA_FACING_BACK);
-//        if (!openCamera(id)) {
-//            alertCameraDialog();
-//        }
         openCamera(id);
     }
 
@@ -136,7 +121,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
         }
         if (camera != null) {
             try {
-                mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
+                List<Camera.Size> mSupportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
                 setUpCamera(camera);
                 camera.setErrorCallback(new Camera.ErrorCallback() {
 
@@ -147,7 +132,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
                 });
                 camera.setPreviewDisplay(surfaceHolder);
                 Camera.Parameters parameters = camera.getParameters();
-                mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, surfaceView.getWidth(), surfaceView.getHeight());
+                Camera.Size mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, surfaceView.getWidth(), surfaceView.getHeight());
                 parameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
                 camera.setParameters(parameters);
                 camera.startPreview();
@@ -180,7 +165,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
     private void setUpCamera(Camera c) {
         Camera.CameraInfo info = new Camera.CameraInfo();
         Camera.getCameraInfo(cameraId, info);
-        rotation = getWindowManager().getDefaultDisplay().getRotation();
+        int rotation = getWindowManager().getDefaultDisplay().getRotation();
         int degree = 0;
         switch (rotation) {
             case Surface.ROTATION_0:
@@ -232,23 +217,21 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
         Camera.Size optimalSize = null;
         double minDiff = Double.MAX_VALUE;
 
-        int targetHeight = h;
-
         for (Camera.Size size : sizes) {
             double ratio = (double) size.width / size.height;
             if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-            if (Math.abs(size.height - targetHeight) < minDiff) {
+            if (Math.abs(size.height - h) < minDiff) {
                 optimalSize = size;
-                minDiff = Math.abs(size.height - targetHeight);
+                minDiff = Math.abs(size.height - h);
             }
         }
 
         if (optimalSize == null) {
             minDiff = Double.MAX_VALUE;
             for (Camera.Size size : sizes) {
-                if (Math.abs(size.height - targetHeight) < minDiff) {
+                if (Math.abs(size.height - h) < minDiff) {
                     optimalSize = size;
-                    minDiff = Math.abs(size.height - targetHeight);
+                    minDiff = Math.abs(size.height - h);
                 }
             }
         }
@@ -282,42 +265,14 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
                             0, loadedImage.getWidth(), loadedImage.getHeight(),
                             rotateMatrix, false);
                     rotatedBitmap = scaleDown(rotatedBitmap, 1000, false);
-                    String state = Environment.getExternalStorageState();
-                    File folder = null;
-                    if (state.contains(Environment.MEDIA_MOUNTED)) {
-                        folder = new File(Environment
-                                .getExternalStorageDirectory() + "/WonderCamera");
-                    } else {
-                        folder = new File(Environment
-                                .getExternalStorageDirectory() + "/WonderCamera");
-                    }
-
-                    boolean success = true;
-                    if (!folder.exists()) {
-                        success = folder.mkdirs();
-                    }
-                    if (success) {
-                        java.util.Date date = new java.util.Date();
-                        imageFile = new File(folder.getAbsolutePath()
-                                + File.separator
-                                + "Image"
-                                + System.currentTimeMillis() % 100000
-                                +".jpg");
-
-                        imageFile.createNewFile();
-                        Log.d("camera", imageFile.getAbsolutePath());
-                    } else {
-                        Toast.makeText(getBaseContext(), "Image Not saved",
-                                Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+                    imageFile = new File(CameraActivity.this.getCacheDir(), "Image");
+                    imageFile.createNewFile();
+                    Log.d("camera", imageFile.getAbsolutePath());
 
                     ByteArrayOutputStream ostream = new ByteArrayOutputStream();
 
                     // save image into gallery
-                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 50, ostream);
-
-
+                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 20, ostream);
 
 
                     FileOutputStream fout = new FileOutputStream(imageFile);
@@ -333,56 +288,67 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
         });
     }
 
+
     public static Bitmap scaleDown(Bitmap realImage, float maxImageSize,
                                    boolean filter) {
         float ratio = Math.min(
-                (float) maxImageSize / realImage.getWidth(),
-                (float) maxImageSize / realImage.getHeight());
-        int width = Math.round((float) ratio * realImage.getWidth());
-        int height = Math.round((float) ratio * realImage.getHeight());
+                maxImageSize / realImage.getWidth(),
+                maxImageSize / realImage.getHeight());
+        int width = Math.round(ratio * realImage.getWidth());
+        int height = Math.round(ratio * realImage.getHeight());
 
-        Bitmap newBitmap = Bitmap.createScaledBitmap(realImage, width,
+        return Bitmap.createScaledBitmap(realImage, width,
                 height, filter);
-        return newBitmap;
     }
 
     private void sendImage(final File imgFile) {
         progressDialog = new ProgressDialog(this);
-        progressDialog.setCanceledOnTouchOutside(true);
         progressDialog.setMessage(DataUtils.getINSTANCE(this).getLanguage().getAnalyze());
         progressDialog.show();
-        requestFile =
-                RequestBody.create(MediaType.parse("multipart/form-data"), imgFile);
-        body =
-                MultipartBody.Part.createFormData("image", imgFile.getName(), requestFile);
+        progressDialog.setCanceledOnTouchOutside(true);
+        progressDialog.setCancelable(false);
+        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), imgFile);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("image", imgFile.getName(), requestFile);
         RequestBody language =
                 RequestBody.create(
                         MediaType.parse("multipart/form-data"), DataUtils.getINSTANCE(this).getLanguage().getKey());
-        service = new RestService();
-//        progressDialog.setMessage("Sending image to server...");
-        Call<ResponseModel> call = service.getImageService().sentImage(language, body);
-        call.enqueue(new Callback<ResponseModel>() {
+        RestService service = new RestService();
+        Call<ImageResponseModel> call = service.getImageService().sentImage(language, body);
+        call.enqueue(new Callback<ImageResponseModel>() {
             @Override
-            public void onResponse(Call<ResponseModel> call, Response<ResponseModel> response) {
+            public void onResponse(Call<ImageResponseModel> call, Response<ImageResponseModel> response) {
                 progressDialog.dismiss();
-                if (response.body().getStatus() == 200) {
-                    Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
-                    intent.putExtra("filePath", imgFile.getAbsolutePath());
-                    intent.putExtra("result", response.body().getMessage());
-                    startActivity(intent);
-                    overridePendingTransition(R.anim.right_in, R.anim.left_out);
+                if (response.isSuccessful()) {
+                    if (response.body().getStatus() == 200) {
+                        Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
+                        intent.putExtra("filePath", imgFile.getAbsolutePath());
+                        intent.putExtra("result", response.body().getMessage());
+                        startActivity(intent);
+                        overridePendingTransition(R.anim.right_in, R.anim.left_out);
+                    } else {
+                        openCamera(cameraId);
+                        Toast.makeText(CameraActivity.this,
+                                response.body().getError().getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     openCamera(cameraId);
-                    Toast.makeText(CameraActivity.this, response.body().getError().getMessage(), Toast.LENGTH_SHORT).show();
-//                    txtResult.setVisibility(View.GONE);
+                    Toast.makeText(CameraActivity.this,
+                            DataUtils.getINSTANCE(CameraActivity.this).
+                                    getLanguage().
+                                    getServerError() + ": " + response.code() + ": " + response.message(),
+                            Toast.LENGTH_SHORT).show();
                 }
+
             }
 
             @Override
-            public void onFailure(Call<ResponseModel> call, Throwable t) {
+            public void onFailure(Call<ImageResponseModel> call, Throwable t) {
                 openCamera(cameraId);
                 progressDialog.dismiss();
-                Toast.makeText(CameraActivity.this, "Can't connect to server. Please check your connection!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(CameraActivity.this,
+                        DataUtils.getINSTANCE(CameraActivity.this).getLanguage().getConnectionFail(),
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }

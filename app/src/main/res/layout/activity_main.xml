@@ -39,14 +39,14 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="The "
+            android:text="@string/the"
             android:textColor="#000"
             android:textSize="20sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Moment"
+            android:text="@string/moment"
             android:textColor="@color/colorPrimaryDark"
             android:textSize="30sp"
             android:textStyle="bold" />
@@ -62,7 +62,7 @@
         android:drawablePadding="20sp"
         android:gravity="left|center_vertical"
         android:paddingLeft="40sp"
-        android:text="Choose from album"
+        android:text="@string/button_choose_from_album"
         android:textColor="#fff"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -79,7 +79,7 @@
         android:drawablePadding="20sp"
         android:gravity="left|center_vertical"
         android:paddingLeft="40sp"
-        android:text="Take Photo"
+        android:text="@string/button_take_photo"
         android:textColor="#fff"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -88,5 +88,12 @@
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="100sp"/>
-
+    <LinearLayout android:id="@+id/bannerLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:background="#000"
+        android:orientation="horizontal"/>
 </RelativeLayout>

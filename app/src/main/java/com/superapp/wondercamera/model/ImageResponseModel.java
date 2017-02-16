@@ -3,25 +3,23 @@ package com.superapp.wondercamera.model;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Created by ManhNV on 2/16/17.
+ * Created by ManhNV on 2/11/17.
  */
 
-public class ResponseModel<T> {
-    @SerializedName("success")
-    private int success;
+public class ImageResponseModel {
+    @SerializedName("status")
+    private int status;
     @SerializedName("message")
     private String message;
     @SerializedName("error")
     private ErrorResponse error;
-    @SerializedName("result")
-    private T result;
 
-    public int getSuccess() {
-        return success;
+    public int getStatus() {
+        return status;
     }
 
-    public void setSuccess(int success) {
-        this.success = success;
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     public String getMessage() {
@@ -38,13 +36,5 @@ public class ResponseModel<T> {
 
     public void setError(ErrorResponse error) {
         this.error = error;
-    }
-
-    public T getResult() {
-        return result;
-    }
-
-    public void setResult(T result) {
-        this.result = result;
     }
 }

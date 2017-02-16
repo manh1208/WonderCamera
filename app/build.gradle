@@ -12,7 +12,7 @@ android {
     compileSdkVersion 25
     buildToolsVersion "24.0.2"
     defaultConfig {
-        applicationId "com.superapp.wondercamera"
+        applicationId "com.superapp.howolddoyoulookhowdoyoufeelthemomentdoantuoicamxuc"
         minSdkVersion 15
         targetSdkVersion 25
         versionCode 1
@@ -39,6 +39,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.squareup.okhttp3:okhttp:3.4.1'
     compile 'com.squareup.okhttp3:logging-interceptor:3.4.1'
-    compile 'com.facebook.android:facebook-android-sdk:4.+'
+    compile 'com.facebook.android:facebook-android-sdk:4.19.0'
     compile files('libs/revmob.jar')
+    compile 'com.isseiaoki:simplecropview:1.1.4'
 }

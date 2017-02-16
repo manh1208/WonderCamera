@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">WonderCamera</string>
     <string name="facebook_app_id">113288645858573</string>
+    <string name="checkupdate">CheckUpdate</string>
+    <string name="language">Language</string>
+    <string name="string_result">Anh ấy đang buồn bã với tuổi 30</string>
+    <string name="button_take_photo">Take Photo</string>
+    <string name="button_choose_from_album">Choose from album</string>
+    <string name="moment">Moment</string>
+    <string name="the">The</string>
 </resources>
