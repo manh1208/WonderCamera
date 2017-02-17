@@ -27,6 +27,7 @@ import com.revmob.ads.banner.RevMobBanner;
 import com.revmob.ads.interstitial.RevMobFullscreen;
 import com.superapp.wondercamera.R;
 import com.superapp.wondercamera.util.DataUtils;
+import com.superapp.wondercamera.util.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -87,6 +88,7 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
             case R.id.btn_save:
                 resultBitmap = takeScreenshot();
                 putOverlay(resultBitmap);
+
                 save();
                 Toast.makeText(this, DataUtils.getINSTANCE(this).getLanguage().getSave(), Toast.LENGTH_SHORT).show();
                 break;
@@ -146,54 +148,15 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
 
     private void save() {
         try {
-            String state = Environment.getExternalStorageState();
-            File folder;
-            if (state.contains(Environment.MEDIA_MOUNTED)) {
-                folder = new File(Environment
-                        .getExternalStorageDirectory() + "/WonderCamera");
-            } else {
-                folder = new File(Environment
-                        .getExternalStorageDirectory() + "/WonderCamera");
-            }
-
-            boolean success = true;
-            if (!folder.exists()) {
-                success = folder.mkdirs();
-            }
-            File imageFile;
-            if (success) {
-                imageFile = new File(folder.getAbsolutePath()
-                        + File.separator
-                        + "ImageSaved"
-                        + System.currentTimeMillis() % 100000
-                        + ".jpg");
-
-                imageFile.createNewFile();
-                Log.d("camera", imageFile.getAbsolutePath());
-            } else {
-                Toast.makeText(getBaseContext(), "Image Not saved",
-                        Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-
-            // save image into gallery
-            resultBitmap.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
-
-
-            FileOutputStream fout;
-
-            fout = new FileOutputStream(imageFile);
-
-            fout.write(ostream.toByteArray());
-            fout.close();
+            File file = Util.saveImageFileFromBitmap(resultBitmap,
+                    Util.getPhotoFile(Environment.getExternalStorageDirectory().getAbsolutePath(),"WonderImage", "WonderCamera"),
+                    -1, Bitmap.CompressFormat.JPEG,100);
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.DATE_TAKEN,
                     System.currentTimeMillis());
             values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
             values.put(MediaStore.MediaColumns.DATA,
-                    imageFile.getAbsolutePath());
+                    file.getAbsolutePath());
             ResultActivity.this.getContentResolver().insert(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
         } catch (FileNotFoundException e) {

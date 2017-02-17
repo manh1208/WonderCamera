@@ -3,7 +3,6 @@ package com.superapp.wondercamera.activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -24,10 +23,9 @@ import com.superapp.wondercamera.R;
 import com.superapp.wondercamera.model.ImageResponseModel;
 import com.superapp.wondercamera.service.RestService;
 import com.superapp.wondercamera.util.DataUtils;
+import com.superapp.wondercamera.util.Util;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import okhttp3.MediaType;
@@ -37,7 +35,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ChooseActivity extends AppCompatActivity implements View.OnClickListener{
+public class ChooseActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ProgressDialog progressDialog;
     private CropImageView cropImageView;
@@ -51,7 +49,7 @@ public class ChooseActivity extends AppCompatActivity implements View.OnClickLis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose);
         String filePath = getIntent().getStringExtra("filePath");
-                File imgFile = new File(filePath);
+        File imgFile = new File(filePath);
         startRevMobSession();
         btnSelect = (Button) findViewById(R.id.btn_select);
         btnUnSelect = (Button) findViewById(R.id.btn_un_select);
@@ -73,40 +71,16 @@ public class ChooseActivity extends AppCompatActivity implements View.OnClickLis
 
                 }
             });
-        }else{
+        } else {
             onBackPressed();
         }
 
     }
 
-    private   Bitmap scaleDown(Bitmap realImage, float maxImageSize,
-                               boolean filter) {
-        float ratio = Math.min(
-                maxImageSize / realImage.getWidth(),
-                maxImageSize / realImage.getHeight());
-        int width = Math.round(ratio * realImage.getWidth());
-        int height = Math.round(ratio * realImage.getHeight());
-        return Bitmap.createScaledBitmap(realImage, width,
-                height, filter);
-    }
 
-    private File compress(File file) throws IOException {
-        File targetFile = new File(ChooseActivity.this.getCacheDir(),"ScaleImage");
-        targetFile.createNewFile();
-        Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-        myBitmap = scaleDown(myBitmap,500,false);
-        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-
-        // save image into gallery
-        myBitmap.compress(Bitmap.CompressFormat.JPEG, 20, ostream);
-        FileOutputStream fout = new FileOutputStream(targetFile);
-        fout.write(ostream.toByteArray());
-        fout.close();
-        return targetFile;
-
-    }
-
-    private void sendImage(File imgFile){
+    private void sendImage(File imgFile) {
+        final String path = imgFile.getAbsolutePath();
+        Log.e("ChooseActivity","Real file size: "+ imgFile.length()/1024);
         btnSelect.setVisibility(View.INVISIBLE);
         btnUnSelect.setVisibility(View.INVISIBLE);
         progressDialog = new ProgressDialog(this);
@@ -115,50 +89,52 @@ public class ChooseActivity extends AppCompatActivity implements View.OnClickLis
         progressDialog.setCanceledOnTouchOutside(true);
         progressDialog.setCancelable(false);
         try {
-            imgFile = compress(imgFile);
+            File compressImage = Util.compressImageFileFromFile(imgFile,
+                    Util.getPhotoFile(ChooseActivity.this.getCacheDir().getPath(), "CatchImage",null),
+                    500, Bitmap.CompressFormat.JPEG, 20);
+            Log.e("ChooseActivity","Compess file size: "+ compressImage.length()/1024);
+            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), compressImage);
+            MultipartBody.Part body = MultipartBody.Part.createFormData("image", compressImage.getName(), requestFile);
+            RequestBody language =
+                    RequestBody.create(
+                            MediaType.parse("multipart/form-data"), DataUtils.getINSTANCE(this).getLanguage().getKey());
+            RestService service = new RestService();
+            Call<ImageResponseModel> call = service.getImageService().sentImage(language, body);
+            call.enqueue(new Callback<ImageResponseModel>() {
+                @Override
+                public void onResponse(Call<ImageResponseModel> call, Response<ImageResponseModel> response) {
+
+                    progressDialog.dismiss();
+                    if (response.isSuccessful()) {
+                        if (response.body().getStatus() == 200) {
+                            Intent intent = new Intent(ChooseActivity.this, ResultActivity.class);
+                            intent.putExtra("filePath", path);
+                            intent.putExtra("result", response.body().getMessage());
+                            startActivity(intent);
+                            finish();
+                            overridePendingTransition(R.anim.right_in, R.anim.left_out);
+                        } else {
+                            Toast.makeText(ChooseActivity.this, response.body().getError().getMessage(), Toast.LENGTH_SHORT).show();
+                            onBackPressed();
+                        }
+                    } else {
+                        Toast.makeText(ChooseActivity.this, DataUtils.getINSTANCE(ChooseActivity.this)
+                                .getLanguage().getServerError() + ": " + response.code() + ": " + response.message(), Toast.LENGTH_SHORT).show();
+                        onBackPressed();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ImageResponseModel> call, Throwable t) {
+                    Toast.makeText(ChooseActivity.this, DataUtils.getINSTANCE(ChooseActivity.this).getLanguage()
+                            .getConnectionFail(), Toast.LENGTH_SHORT).show();
+                    progressDialog.dismiss();
+                    ChooseActivity.this.onBackPressed();
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
-        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), imgFile);
-        MultipartBody.Part body = MultipartBody.Part.createFormData("image", imgFile.getName(), requestFile);
-        RequestBody language =
-                RequestBody.create(
-                        MediaType.parse("multipart/form-data"), DataUtils.getINSTANCE(this).getLanguage().getKey());
-        RestService service = new RestService();
-        Call<ImageResponseModel> call = service.getImageService().sentImage(language, body);
-        final File finalImgFile = imgFile;
-        call.enqueue(new Callback<ImageResponseModel>() {
-            @Override
-            public void onResponse(Call<ImageResponseModel> call, Response<ImageResponseModel> response) {
-
-                progressDialog.dismiss();
-                if (response.isSuccessful()) {
-                    if (response.body().getStatus() == 200) {
-                        Intent intent = new Intent(ChooseActivity.this, ResultActivity.class);
-                        intent.putExtra("filePath", finalImgFile.getAbsolutePath());
-                        intent.putExtra("result", response.body().getMessage());
-                        startActivity(intent);
-                        finish();
-                        overridePendingTransition(R.anim.right_in, R.anim.left_out);
-                    } else {
-                        Toast.makeText(ChooseActivity.this, response.body().getError().getMessage(), Toast.LENGTH_SHORT).show();
-                        onBackPressed();
-                    }
-                }else{
-                    Toast.makeText(ChooseActivity.this, DataUtils.getINSTANCE(ChooseActivity.this)
-                            .getLanguage().getServerError()+": "+ response.code()+": " +response.message(), Toast.LENGTH_SHORT).show();
-                    onBackPressed();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ImageResponseModel> call, Throwable t) {
-                Toast.makeText(ChooseActivity.this, DataUtils.getINSTANCE(ChooseActivity.this).getLanguage()
-                        .getConnectionFail(), Toast.LENGTH_SHORT).show();
-                progressDialog.dismiss();
-                ChooseActivity.this.onBackPressed();
-            }
-        });
     }
 
     public Uri createSaveUri() {

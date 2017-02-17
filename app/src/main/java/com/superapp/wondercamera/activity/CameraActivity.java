@@ -25,6 +25,7 @@ import com.superapp.wondercamera.custom.CameraViewCustom;
 import com.superapp.wondercamera.model.ImageResponseModel;
 import com.superapp.wondercamera.service.RestService;
 import com.superapp.wondercamera.util.DataUtils;
+import com.superapp.wondercamera.util.Util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,6 +40,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static com.superapp.wondercamera.util.Util.getOptimalPreviewSize;
+
 public class CameraActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private CameraViewCustom surfaceView;
     private SurfaceHolder surfaceHolder;
@@ -48,6 +51,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
     private ProgressDialog progressDialog;
     private RevMob revmob;
     private RevMobBanner banner;
+    private File imageFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -219,35 +223,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
         params.setRotation(rotation);
     }
 
-    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
-        final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio = (double) h / w;
 
-        if (sizes == null) return null;
-
-        Camera.Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
-
-        for (Camera.Size size : sizes) {
-            double ratio = (double) size.width / size.height;
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-            if (Math.abs(size.height - h) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(size.height - h);
-            }
-        }
-
-        if (optimalSize == null) {
-            minDiff = Double.MAX_VALUE;
-            for (Camera.Size size : sizes) {
-                if (Math.abs(size.height - h) < minDiff) {
-                    optimalSize = size;
-                    minDiff = Math.abs(size.height - h);
-                }
-            }
-        }
-        return optimalSize;
-    }
 
 
     private void takeImage() {
@@ -255,16 +231,14 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
         captureImage.setEnabled(false);
         camera.takePicture(null, null, new Camera.PictureCallback() {
 
-            private File imageFile;
+
 
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
                 try {
-
                     // convert byte array into bitmap
                     Bitmap loadedImage = BitmapFactory.decodeByteArray(data, 0,
                             data.length);
-
                     // rotate Image
                     Matrix rotateMatrix = new Matrix();
                     if (cameraId == Camera.CameraInfo.CAMERA_FACING_FRONT) {
@@ -275,53 +249,19 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
                     Bitmap rotatedBitmap = Bitmap.createBitmap(loadedImage, 0,
                             0, loadedImage.getWidth(), loadedImage.getHeight(),
                             rotateMatrix, false);
-                    imageFile = new File(CameraActivity.this.getCacheDir(), "Image");
-                    imageFile.createNewFile();
-                    Log.d("camera", imageFile.getAbsolutePath());
+                    imageFile = Util.saveImageFileFromBitmap(rotatedBitmap,
+                            Util.getPhotoFile(CameraActivity.this.getCacheDir().getPath(),"Image",null),-1, Bitmap.CompressFormat.JPEG,100);
 
-                    ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-
-                    // save image into gallery
-                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
-                    FileOutputStream fout = new FileOutputStream(imageFile);
-                    fout.write(ostream.toByteArray());
-                    fout.close();
                     Log.e("Camera ACtivity","Fil real size: "+imageFile.length()/1024);
-                    sendImage(compress(imageFile));
+                    sendImage(Util.compressImageFileFromFile(imageFile,
+                            Util.getPhotoFile(CameraActivity.this.getCacheDir().getPath(),"CatchImage",null),
+                            500, Bitmap.CompressFormat.JPEG,20));
                     captureImage.setEnabled(true);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
-    }
-
-
-    private   Bitmap scaleDown(Bitmap realImage, float maxImageSize,
-                                   boolean filter) {
-        float ratio = Math.min(
-                maxImageSize / realImage.getWidth(),
-                maxImageSize / realImage.getHeight());
-        int width = Math.round(ratio * realImage.getWidth());
-        int height = Math.round(ratio * realImage.getHeight());
-        return Bitmap.createScaledBitmap(realImage, width,
-                height, filter);
-    }
-
-    private File compress(File file) throws IOException {
-        File targetFile = new File(CameraActivity.this.getCacheDir(),"ScaleImage");
-        targetFile.createNewFile();
-        Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-        myBitmap = scaleDown(myBitmap,1000,false);
-        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-
-        // save image into gallery
-        myBitmap.compress(Bitmap.CompressFormat.JPEG, 20, ostream);
-        FileOutputStream fout = new FileOutputStream(targetFile);
-        fout.write(ostream.toByteArray());
-        fout.close();
-        return targetFile;
-
     }
 
     private void sendImage(final File imgFile) {
@@ -346,7 +286,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
                 if (response.isSuccessful()) {
                     if (response.body().getStatus() == 200) {
                         Intent intent = new Intent(CameraActivity.this, ResultActivity.class);
-                        intent.putExtra("filePath", imgFile.getAbsolutePath());
+                        intent.putExtra("filePath", imageFile.getAbsolutePath());
                         intent.putExtra("result", response.body().getMessage());
                         startActivity(intent);
                         overridePendingTransition(R.anim.right_in, R.anim.left_out);

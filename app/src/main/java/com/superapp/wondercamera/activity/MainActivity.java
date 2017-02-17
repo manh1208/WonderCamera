@@ -31,7 +31,11 @@ import com.superapp.wondercamera.model.StoreVersion;
 import com.superapp.wondercamera.service.RestService;
 import com.superapp.wondercamera.util.DataUtils;
 import com.superapp.wondercamera.util.RequestPermissionListener;
+import com.superapp.wondercamera.util.Util;
+
 import java.io.File;
+import java.io.IOException;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -174,8 +178,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == IMAGE_PICK && resultCode == Activity.RESULT_OK) {
-            File f = DataUtils.getImageFileFromUri(this, data.getData(), DataUtils.getPicturePath(System.currentTimeMillis() % 100000
-                    + "Image.jpg"), 1000, Bitmap.CompressFormat.JPEG, 50);
+            File f = null;
+            try {
+                f = Util.saveImageFileFromUri(this, data.getData(), Util.getPhotoFile(getCacheDir().getAbsolutePath(),"ChooseImage",null) , -1, Bitmap.CompressFormat.JPEG, 100);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             Intent intent = new Intent(MainActivity.this, ChooseActivity.class);
             intent.putExtra("filePath", f.getAbsolutePath());
