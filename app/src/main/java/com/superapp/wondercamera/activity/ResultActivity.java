@@ -86,6 +86,7 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
         switch (view.getId()) {
             case R.id.btn_save:
                 resultBitmap = takeScreenshot();
+                putOverlay(resultBitmap);
                 save();
                 Toast.makeText(this, DataUtils.getINSTANCE(this).getLanguage().getSave(), Toast.LENGTH_SHORT).show();
                 break;
@@ -93,10 +94,10 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
                 btnBack.setVisibility(View.INVISIBLE);
                 btnShare.setVisibility(View.INVISIBLE);
                 btnSave.setVisibility(View.INVISIBLE);
-                Bitmap watermark = BitmapFactory.decodeResource(this.getResources(), R.drawable.icon);
+
                 resultBitmap = takeScreenshot();
                 Bitmap bitmap = resultBitmap;
-                putOverlay(bitmap, watermark);
+                putOverlay(bitmap);
                 FacebookSdk.sdkInitialize(getApplicationContext());
                 SharePhoto photo = new SharePhoto.Builder()
                         .setBitmap(bitmap)
@@ -124,10 +125,23 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
         return bitmap;
     }
 
-    public void putOverlay(Bitmap bitmap, Bitmap overlay) {
+    public void putOverlay(Bitmap bitmap) {
+        Bitmap watermark = BitmapFactory.decodeResource(this.getResources(), R.drawable.icon);
         Canvas canvas = new Canvas(bitmap);
         Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
-        canvas.drawBitmap(overlay, bitmap.getWidth() - overlay.getWidth() - 30, 30, paint);
+        watermark = scaleDown(watermark,150,false);
+        canvas.drawBitmap(watermark, bitmap.getWidth() - watermark.getWidth() - 30, 30, paint);
+    }
+
+    private   Bitmap scaleDown(Bitmap realImage, float maxImageSize,
+                               boolean filter) {
+        float ratio = Math.min(
+                maxImageSize / realImage.getWidth(),
+                maxImageSize / realImage.getHeight());
+        int width = Math.round(ratio * realImage.getWidth());
+        int height = Math.round(ratio * realImage.getHeight());
+        return Bitmap.createScaledBitmap(realImage, width,
+                height, filter);
     }
 
     private void save() {

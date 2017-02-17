@@ -76,7 +76,18 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        openCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
+
+        try {
+
+
+            if (Camera.getNumberOfCameras() > 1) {
+                openCamera(Camera.CameraInfo.CAMERA_FACING_FRONT);
+            } else {
+                openCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
+            }
+        }catch (Exception e){
+            openCamera(Camera.CameraInfo.CAMERA_FACING_BACK);
+        }
     }
 
     @Override
@@ -264,7 +275,6 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
                     Bitmap rotatedBitmap = Bitmap.createBitmap(loadedImage, 0,
                             0, loadedImage.getWidth(), loadedImage.getHeight(),
                             rotateMatrix, false);
-                    rotatedBitmap = scaleDown(rotatedBitmap, 1000, false);
                     imageFile = new File(CameraActivity.this.getCacheDir(), "Image");
                     imageFile.createNewFile();
                     Log.d("camera", imageFile.getAbsolutePath());
@@ -272,33 +282,46 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
                     ByteArrayOutputStream ostream = new ByteArrayOutputStream();
 
                     // save image into gallery
-                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 20, ostream);
-
-
+                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, ostream);
                     FileOutputStream fout = new FileOutputStream(imageFile);
                     fout.write(ostream.toByteArray());
                     fout.close();
-                    sendImage(imageFile);
+                    Log.e("Camera ACtivity","Fil real size: "+imageFile.length()/1024);
+                    sendImage(compress(imageFile));
                     captureImage.setEnabled(true);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
             }
         });
     }
 
 
-    public static Bitmap scaleDown(Bitmap realImage, float maxImageSize,
+    private   Bitmap scaleDown(Bitmap realImage, float maxImageSize,
                                    boolean filter) {
         float ratio = Math.min(
                 maxImageSize / realImage.getWidth(),
                 maxImageSize / realImage.getHeight());
         int width = Math.round(ratio * realImage.getWidth());
         int height = Math.round(ratio * realImage.getHeight());
-
         return Bitmap.createScaledBitmap(realImage, width,
                 height, filter);
+    }
+
+    private File compress(File file) throws IOException {
+        File targetFile = new File(CameraActivity.this.getCacheDir(),"ScaleImage");
+        targetFile.createNewFile();
+        Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+        myBitmap = scaleDown(myBitmap,1000,false);
+        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
+
+        // save image into gallery
+        myBitmap.compress(Bitmap.CompressFormat.JPEG, 20, ostream);
+        FileOutputStream fout = new FileOutputStream(targetFile);
+        fout.write(ostream.toByteArray());
+        fout.close();
+        return targetFile;
+
     }
 
     private void sendImage(final File imgFile) {
@@ -307,6 +330,8 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
         progressDialog.show();
         progressDialog.setCanceledOnTouchOutside(true);
         progressDialog.setCancelable(false);
+        Log.e("Camera ACtivity","Fil send size: "+imgFile.length()/1024);
+
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), imgFile);
         MultipartBody.Part body = MultipartBody.Part.createFormData("image", imgFile.getName(), requestFile);
         RequestBody language =

@@ -38,6 +38,7 @@
         custom:scv_min_frame_size="50dp"
         custom:scv_frame_stroke_weight="1dp"
         custom:scv_guide_stroke_weight="1dp"
+
         />
     <RelativeLayout
         android:layout_width="match_parent"

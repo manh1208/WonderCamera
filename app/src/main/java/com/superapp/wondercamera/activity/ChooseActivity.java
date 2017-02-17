@@ -3,6 +3,7 @@ package com.superapp.wondercamera.activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +25,10 @@ import com.superapp.wondercamera.model.ImageResponseModel;
 import com.superapp.wondercamera.service.RestService;
 import com.superapp.wondercamera.util.DataUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -57,7 +61,7 @@ public class ChooseActivity extends AppCompatActivity implements View.OnClickLis
             cropImageView = (CropImageView) findViewById(R.id.cropImageView);
             cropImageView.setCropMode(CropImageView.CropMode.RATIO_3_4);
             cropImageView.setCompressFormat(Bitmap.CompressFormat.JPEG);
-            cropImageView.setCompressQuality(30);
+            cropImageView.setCompressQuality(100);
             cropImageView.startLoad(Uri.fromFile(imgFile), new LoadCallback() {
                 @Override
                 public void onSuccess() {
@@ -74,7 +78,35 @@ public class ChooseActivity extends AppCompatActivity implements View.OnClickLis
         }
 
     }
-    private void sendImage(final File imgFile){
+
+    private   Bitmap scaleDown(Bitmap realImage, float maxImageSize,
+                               boolean filter) {
+        float ratio = Math.min(
+                maxImageSize / realImage.getWidth(),
+                maxImageSize / realImage.getHeight());
+        int width = Math.round(ratio * realImage.getWidth());
+        int height = Math.round(ratio * realImage.getHeight());
+        return Bitmap.createScaledBitmap(realImage, width,
+                height, filter);
+    }
+
+    private File compress(File file) throws IOException {
+        File targetFile = new File(ChooseActivity.this.getCacheDir(),"ScaleImage");
+        targetFile.createNewFile();
+        Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+        myBitmap = scaleDown(myBitmap,500,false);
+        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
+
+        // save image into gallery
+        myBitmap.compress(Bitmap.CompressFormat.JPEG, 20, ostream);
+        FileOutputStream fout = new FileOutputStream(targetFile);
+        fout.write(ostream.toByteArray());
+        fout.close();
+        return targetFile;
+
+    }
+
+    private void sendImage(File imgFile){
         btnSelect.setVisibility(View.INVISIBLE);
         btnUnSelect.setVisibility(View.INVISIBLE);
         progressDialog = new ProgressDialog(this);
@@ -82,6 +114,11 @@ public class ChooseActivity extends AppCompatActivity implements View.OnClickLis
         progressDialog.show();
         progressDialog.setCanceledOnTouchOutside(true);
         progressDialog.setCancelable(false);
+        try {
+            imgFile = compress(imgFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), imgFile);
         MultipartBody.Part body = MultipartBody.Part.createFormData("image", imgFile.getName(), requestFile);
         RequestBody language =
@@ -89,6 +126,7 @@ public class ChooseActivity extends AppCompatActivity implements View.OnClickLis
                         MediaType.parse("multipart/form-data"), DataUtils.getINSTANCE(this).getLanguage().getKey());
         RestService service = new RestService();
         Call<ImageResponseModel> call = service.getImageService().sentImage(language, body);
+        final File finalImgFile = imgFile;
         call.enqueue(new Callback<ImageResponseModel>() {
             @Override
             public void onResponse(Call<ImageResponseModel> call, Response<ImageResponseModel> response) {
@@ -97,7 +135,7 @@ public class ChooseActivity extends AppCompatActivity implements View.OnClickLis
                 if (response.isSuccessful()) {
                     if (response.body().getStatus() == 200) {
                         Intent intent = new Intent(ChooseActivity.this, ResultActivity.class);
-                        intent.putExtra("filePath", imgFile.getAbsolutePath());
+                        intent.putExtra("filePath", finalImgFile.getAbsolutePath());
                         intent.putExtra("result", response.body().getMessage());
                         startActivity(intent);
                         finish();
